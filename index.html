@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스튜디오 공간 | 프리미엄 인테리어 디자인</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans KR -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; }
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased">
+
+  <!-- Header & Navigation -->
+  <header class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 border-b border-stone-200">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <a href="#" class="text-2xl font-bold tracking-wider text-stone-900">STUDIO SPATIAL</a>
+      <nav class="hidden md:flex space-x-8 text-sm font-medium text-stone-600">
+        <a href="#about" class="hover:text-stone-900 transition-colors">회사 소개</a>
+        <a href="#portfolio" class="hover:text-stone-900 transition-colors">포트폴리오</a>
+        <a href="#process" class="hover:text-stone-900 transition-colors">시공 절차</a>
+        <a href="#contact" class="hover:text-stone-900 transition-colors">견적 문의</a>
+      </nav>
+      <a href="#contact" class="bg-stone-900 text-white px-5 py-2.5 text-sm font-medium hover:bg-stone-800 transition-colors">
+        상담 신청하기
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat filter brightness-75"
+         style="background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1920&q=80');">
+    </div>
+    <div class="relative z-10 text-center text-white px-6 max-w-4xl">
+      <span class="text-sm font-light tracking-widest uppercase mb-4 block">Interior Design & Renovation</span>
+      <h1 class="text-4xl md:text-6xl font-light mb-6 leading-tight">
+        공간에 감성을 더하고,<br>삶의 방식을 디자인합니다
+      </h1>
+      <p class="text-lg md:text-xl font-light opacity-90 mb-10 max-w-2xl mx-auto">
+        주거 공간부터 상업 공간까지, 디테일한 설계와 투명한 시공으로 완벽한 공간을 선물합니다.
+      </p>
+      <div class="flex justify-center gap-4">
+        <a href="#portfolio" class="bg-white text-stone-900 px-8 py-3.5 font-medium hover:bg-stone-100 transition-colors">
+          포트폴리오 보기
+        </a>
+        <a href="#contact" class="border border-white text-white px-8 py-3.5 font-medium hover:bg-white/10 transition-colors">
+          간이 견적 문의
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="py-24 max-w-7xl mx-auto px-6">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-widest text-amber-800 mb-2 block">About Studio Spatial</span>
+        <h2 class="text-3xl font-light mb-6 text-stone-900">당신의 일상이 더욱 특별해지도록</h2>
+        <p class="text-stone-600 leading-relaxed mb-6">
+          스튜디오 공간은 단순한 인테리어 시공을 넘어, 그 공간에 머무는 사람들의 라이프스타일과 동선을 깊이 고민합니다. 미학적인 아름다움과 실용성의 균형을 맞춰 최고 품질의 공간 경험을 제공합니다.
+        </p>
+        <div class="grid grid-cols-3 gap-6 pt-6 border-t border-stone-200">
+          <div>
+            <div class="text-3xl font-light text-stone-900 mb-1">150+</div>
+            <div class="text-xs text-stone-500">완공 프로젝트</div>
+          </div>
+          <div>
+            <div class="text-3xl font-light text-stone-900 mb-1">98%</div>
+            <div class="text-xs text-stone-500">고객 만족도</div>
+          </div>
+          <div>
+            <div class="text-3xl font-light text-stone-900 mb-1">A/S 2년</div>
+            <div class="text-xs text-stone-500">사후 관리 보장</div>
+          </div>
+        </div>
+      </div>
+      <div class="aspect-[4/3] bg-stone-200 overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=80" 
+             alt="인테리어 디자인 작업" class="w-full h-full object-cover">
+      </div>
+    </div>
+  </section>
+
+  <!-- Portfolio Section -->
+  <section id="portfolio" class="py-24 bg-stone-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-widest text-amber-800 mb-2 block">Our Works</span>
+          <h2 class="text-3xl font-light text-stone-900">최신 시공 사례</h2>
+        </div>
+        <p class="text-stone-500 mt-2 md:mt-0 text-sm">주거 및 상업 공간의 대표 프로젝트를 확인해 보세요.</p>
+      </div>
+
+      <!-- Portfolio Grid -->
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Card 1 -->
+        <div class="group cursor-pointer">
+          <div class="overflow-hidden mb-4 aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" 
+                 alt="Project 1" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <span class="text-xs text-amber-800 font-medium">Residential · 34평</span>
+          <h3 class="text-lg font-medium text-stone-900 mt-1">한남동 미니멀 아파트 리모델링</h3>
+          <p class="text-sm text-stone-500 mt-1">따뜻한 우드 톤과 화이트의 조화로운 주거 공간</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="group cursor-pointer">
+          <div class="overflow-hidden mb-4 aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80" 
+                 alt="Project 2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <span class="text-xs text-amber-800 font-medium">Commercial · 45평</span>
+          <h3 class="text-lg font-medium text-stone-900 mt-1">성수동 감성 카페 디자인</h3>
+          <p class="text-sm text-stone-500 mt-1">노출 콘크리트와 모던 가구의 미학적 구성</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="group cursor-pointer">
+          <div class="overflow-hidden mb-4 aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80" 
+                 alt="Project 3" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+          </div>
+          <span class="text-xs text-amber-800 font-medium">Residential · 52평</span>
+          <h3 class="text-lg font-medium text-stone-900 mt-1">판교 하이엔드 단독주택</h3>
+          <p class="text-sm text-stone-500 mt-1">자연광을 극대화한 모던 조경 및 실내 연출</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process Section -->
+  <section id="process" class="py-24 max-w-7xl mx-auto px-6">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <span class="text-xs font-semibold uppercase tracking-widest text-amber-800 mb-2 block">Process</span>
+      <h2 class="text-3xl font-light text-stone-900">체계적인 체공 프로세스</h2>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-8">
+      <div class="p-6 border border-stone-200 bg-white">
+        <div class="text-2xl font-light text-amber-800 mb-4">01</div>
+        <h3 class="font-medium text-lg mb-2">상담 및 현장 실측</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">고객님의 요구사항 파악 및 현장 상태를 철저히 검토합니다.</p>
+      </div>
+      <div class="p-6 border border-stone-200 bg-white">
+        <div class="text-2xl font-light text-amber-800 mb-4">02</div>
+        <h3 class="font-medium text-lg mb-2">3D 디자인 렌더링</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">3D 입체 설계를 통해 완성될 공간을 사전에 시각화합니다.</p>
+      </div>
+      <div class="p-6 border border-stone-200 bg-white">
+        <div class="text-2xl font-light text-amber-800 mb-4">03</div>
+        <h3 class="font-medium text-lg mb-2">정밀 시공 관리</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">전문 현장 관리자의 감독 하에 계획대로 안전 시공합니다.</p>
+      </div>
+      <div class="p-6 border border-stone-200 bg-white">
+        <div class="text-2xl font-light text-amber-800 mb-4">04</div>
+        <h3 class="font-medium text-lg mb-2">검수 및 사후 관리</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">최종 점검 후 인도하며, 2년간 하자 보증을 약속합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Form Section -->
+  <section id="contact" class="py-24 bg-stone-900 text-white">
+    <div class="max-w-3xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <span class="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-2 block">Contact Us</span>
+        <h2 class="text-3xl font-light">인테리어 견적 문의</h2>
+        <p class="text-stone-400 mt-2 text-sm">정보를 남겨주시면 담당 실장이 확인 후 24시간 이내에 연락드립니다.</p>
+      </div>
+
+      <!-- Formspree 또는 외부 폼 서비스 연동 주소를 action에 입력 -->
+      <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" class="space-y-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">성함 / 업체명 *</label>
+            <input type="text" name="name" required class="w-full bg-stone-800 border border-stone-700 px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">연락처 *</label>
+            <input type="tel" name="phone" required class="w-full bg-stone-800 border border-stone-700 px-4 py-3 text-white focus:outline-none focus:border-amber-500" placeholder="010-0000-0000">
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">공사 공간 구분</label>
+            <select name="type" class="w-full bg-stone-800 border border-stone-700 px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+              <option value="아파트/주거">아파트 / 주거</option>
+              <option value="상가/오피스">상가 / 오피스</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">분양 / 전용 평수</label>
+            <input type="text" name="size" class="w-full bg-stone-800 border border-stone-700 px-4 py-3 text-white focus:outline-none focus:border-amber-500" placeholder="예: 32평">
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">시공 예정일</label>
+            <input type="date" name="schedule" class="w-full bg-stone-800 border border-stone-700 px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-stone-400 mb-2">문의 내용을 입력해 주세요</label>
+          <textarea name="message" rows="4" class="w-full bg-stone-800 border border-stone-700 px-4 py-3 text-white focus:outline-none focus:border-amber-500" placeholder="시공 지역, 원하시는 컨셉, 예산대 등을 적어주시면 빠른 상담이 가능합니다."></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-4 transition-colors">
+          무료 견적 상담 신청
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-stone-950 text-stone-500 py-12 border-t border-stone-900 text-sm">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <p class="font-bold text-stone-300 mb-2">STUDIO SPATIAL (스튜디오 공간)</p>
+        <p>사업자 등록번호: 000-00-00000 | 대표: 홍길동</p>
+        <p>주소: 서울특별시 강남구 테헤란로 00길 00, 3층</p>
+        <p>이메일: contact@studiospatial.com | TEL: 02-1234-5678</p>
+      </div>
+      <div class="md:text-right text-xs text-stone-600">
+        &copy; 2026 STUDIO SPATIAL. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
