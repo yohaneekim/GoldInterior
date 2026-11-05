@@ -1,7 +1,13 @@
 body {
-        font-family: "Noto Sans KR", sans-serif;
-      }
-section[id] { scroll-margin-top: 5rem; }
-[hidden] { display: none !important; }
+  font-family: "Noto Sans KR", sans-serif;
+}
+section[id] {
+  scroll-margin-top: 5rem;
+}
+[hidden] {
+  display: none !important;
+}
 
-.hero-background { background-image: url("https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1920&q=80"); }
+.hero-background {
+  background-image: url("../Photo/KakaoTalk_20261101_162430755_24.jpg");
+}
