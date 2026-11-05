@@ -1,0 +1,1 @@
+{"name":"gold-interior","private":true,"type":"module","scripts":{"start":"node server.mjs","setup-admin":"node setup-admin.mjs","test":"node --test"},"engines":{"node":">=22"}}

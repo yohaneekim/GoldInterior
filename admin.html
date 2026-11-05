@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>사진 관리 | 골드 인테리어</title>
+<link rel="stylesheet" href="/css/admin.css"><script src="/js/admin.js" defer></script>
+</head>
+<body><main>
+<a href="/">← 홈페이지로 돌아가기</a><h1>시공 사진 관리</h1>
+<p id="status" role="status" aria-live="polite"></p>
+<form id="setup-form" hidden>
+<h2>최초 관리자 계정 만들기</h2>
+<p>이 컴퓨터에 아직 관리자 계정이 없습니다. 아래에서 한 번만 만들어 주세요.</p>
+<label for="setup-username">사용할 아이디</label><input id="setup-username" name="username" autocomplete="username" required maxlength="100">
+<label for="setup-password">사용할 비밀번호 (12자 이상)</label><input id="setup-password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="256">
+<label for="setup-confirm">비밀번호 확인</label><input id="setup-confirm" name="confirm" type="password" autocomplete="new-password" required minlength="12" maxlength="256">
+<button type="submit">계정 만들고 로그인</button>
+</form>
+<form id="login-form" hidden>
+<h2>관리자 로그인</h2>
+<label for="username">아이디</label><input id="username" name="username" autocomplete="username" required maxlength="100">
+<label for="password">비밀번호</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+<button type="submit">로그인</button>
+</form>
+<section id="manager" hidden>
+<button id="logout" type="button">로그아웃</button>
+<form id="upload-form">
+<label for="title">시공 사례 제목</label><input id="title" name="title" required maxlength="100" placeholder="예: 강남 아파트 리모델링">
+<label for="description">설명</label><textarea id="description" name="description" maxlength="500" rows="3"></textarea>
+<label for="photo">사진 선택</label><input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+<p>JPG, PNG, WebP · 사진 한 장당 최대 5MB. 등록하면 홈페이지에 바로 공개됩니다.</p>
+<img id="preview" hidden alt="등록할 사진 미리보기">
+<button type="submit">홈페이지에 사진 추가</button>
+</form>
+<h2>등록한 사진</h2><div id="photos"></div>
+</section>
+</main></body></html>
