@@ -30,6 +30,31 @@ test('관리자 인증, 업로드 제한, 영구 저장과 공개 조회',async(
  const photos=await (await fetch(base+'/api/photos')).json();assert.equal(photos.length,1);assert.equal(photos[0].title,'테스트 시공');
  const saved=await fetch(base+photo.url);assert.equal(saved.headers.get('content-type'),'image/png');assert.equal(Buffer.from(await saved.arrayBuffer()).toString('base64'),image);
  const fs=await import('node:fs/promises');assert.equal(JSON.parse(await fs.readFile(join(data,'photos',photo.id+'.json'),'utf8')).title,'테스트 시공');
+ // Old single-photo records and new multi-photo projects must coexist.
+ const legacyId='1700000000000-aabbccdd';
+ await writeFile(join(data,'photos',legacyId+'.json'),JSON.stringify({id:legacyId,title:'기존 사진',description:'구버전 데이터',url:photo.url}));
+ assert.equal((await (await fetch(base+'/api/photos')).json()).length,2);
+ assert.equal((await fetch(base+'/api/photos?manage=1')).status,401);
+ const multiple=await post('/api/photos',{title:'사진 묶음',images:[image,image],region:'서울',size:'32평',duration:'4주',scope:'주방',order:-1},cookie);
+ assert.equal(multiple.status,201);const project=await multiple.json();assert.equal(project.images.length,2);
+ assert.equal((await fetch(base+project.images[1])).status,200);
+ assert.equal((await (await fetch(base+'/api/photos')).json())[0].id,project.id);
+ assert.equal((await post('/api/photos',{title:'초과',images:Array(9).fill(image)},cookie)).status,400);
+ assert.equal((await post('/api/photos',{title:'잘못된 두번째 사진',images:[image,'bad']},cookie)).status,400);
+ assert.equal((await (await fetch(base+'/api/photos')).json()).length,3);
+ assert.equal((await post('/api/photos/'+project.id,{title:'변경'})).status,401);
+ assert.equal((await post('/api/photos/'+project.id,{title:'변경'},cookie,'https://evil.example')).status,403);
+ assert.equal((await post('/api/photos/'+project.id,{title:'변경',order:1.5},cookie)).status,400);
+ const update={title:'수정한 사례',description:'설명 수정',region:'부산',size:'40평',duration:'3주',scope:'전체',order:2,hidden:true};
+ assert.equal((await post('/api/photos/'+project.id,update,cookie)).status,200);
+ assert.equal((await (await fetch(base+'/api/photos')).json()).length,2);
+ const managed=await (await fetch(base+'/api/photos?manage=1',{headers:{Cookie:cookie}})).json();
+ assert.equal(managed.length,3);assert.equal(managed.find(p=>p.id===project.id).hidden,true);
+ const stored=JSON.parse(await fs.readFile(join(data,'photos',project.id+'.json'),'utf8'));
+ assert.equal(stored.region,'부산');assert.deepEqual(stored.images,project.images);
+ assert.equal((await post('/api/photos/'+project.id,{...update,hidden:false,order:-2},cookie)).status,200);
+ assert.equal((await (await fetch(base+'/api/photos')).json())[0].title,'수정한 사례');
+ for(const path of ['/css/style.css','/js/gallery.js','/admin.html'])assert.equal((await fetch(base+path)).status,200);
  assert.equal((await post('/api/logout',{},cookie)).status,200);assert.equal((await post('/api/photos',{},cookie)).status,401);
  }finally{await new Promise(resolve=>server.close(resolve));await rm(data,{recursive:true,force:true});}
 });

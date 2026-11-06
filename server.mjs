@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, rename, unlink } from 'node:fs/promises';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,30 @@ const sessions = new Map();
 const attempts = new Map();
 setInterval(() => { for (const [k,v] of sessions) if(v.expires < Date.now()) sessions.delete(k); for(const [k,v] of attempts) if(v.until < Date.now()) attempts.delete(k); }, 60000).unref();
 function send(res, code, value) { res.writeHead(code, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(value)); }
-async function body(req) { let size=0; const chunks=[]; for await (const chunk of req) { size+=chunk.length; if(size>7*1024*1024) throw Object.assign(new Error('파일은 5MB 이하로 선택해 주세요.'),{status:413}); chunks.push(chunk); } try { return JSON.parse(Buffer.concat(chunks)); } catch { throw Object.assign(new Error('잘못된 요청입니다.'),{status:400}); } }
+async function body(req, limit=7*1024*1024) { let size=0; const chunks=[]; for await (const chunk of req) { size+=chunk.length; if(size>limit) throw Object.assign(new Error('전송 용량을 초과했습니다.'),{status:413}); chunks.push(chunk); } try { return JSON.parse(Buffer.concat(chunks)); } catch { throw Object.assign(new Error('잘못된 요청입니다.'),{status:400}); } }
+function projectFields(input) {
+ const fields={};
+ for(const [key,max] of Object.entries({title:100,description:500,region:100,size:50,duration:100,scope:200})) {
+  if(input[key]!==undefined && typeof input[key]!=='string') throw Object.assign(new Error('텍스트 항목을 확인해 주세요.'),{status:400});
+  fields[key]=(input[key]||'').trim();
+  if(fields[key].length>max || (key==='title' && !fields[key])) throw Object.assign(new Error(`제목은 필수이며 각 항목의 글자 수 제한을 지켜 주세요.`),{status:400});
+ }
+ if(input.order!==undefined && (!Number.isSafeInteger(input.order)||Math.abs(input.order)>1000000)) throw Object.assign(new Error('표시 순서는 -1000000~1000000의 정수로 입력해 주세요.'),{status:400});
+ if(input.hidden!==undefined && typeof input.hidden!=='boolean') throw Object.assign(new Error('공개 설정을 확인해 주세요.'),{status:400});
+ return {...fields,order:input.order??0,hidden:input.hidden??false};
+}
+function decodeImage(image) {
+ if(typeof image!=='string'|| !/^[A-Za-z0-9+/]*={0,2}$/.test(image)) throw Object.assign(new Error('올바른 사진을 선택해 주세요.'),{status:400});
+ const bytes=Buffer.from(image,'base64');let ext;
+ if(bytes.subarray(0,3).equals(Buffer.from([255,216,255])))ext='jpg';
+ else if(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))ext='png';
+ else if(bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP')ext='webp';
+ if(!ext||bytes.length>5*1024*1024||bytes.length<12)throw Object.assign(new Error('사진 한 장당 5MB 이하의 JPG, PNG, WebP만 가능합니다.'),{status:400});
+ return {bytes,ext};
+}
+// Serialize metadata edits so simultaneous saves cannot overwrite a newer edit halfway through.
+let mutation=Promise.resolve();
+function exclusive(action){const next=mutation.then(action);mutation=next.catch(()=>{});return next;}
 async function setupAvailable(req) {
  const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
  if (!local || process.env.PUBLIC_ORIGIN || origin !== 'http://localhost:3000') return false;
@@ -45,21 +68,36 @@ export const server = createServer(async(req,res)=>{
  }
  if(path==='/api/logout' && req.method==='POST') { const s=session(req); if(s) sessions.delete(s.token); res.setHeader('Set-Cookie',cookie('',0)); return send(res,200,{ok:true}); }
  if(path==='/api/photos' && req.method==='GET') {
- const names=(await readdir(join(data,'photos'))).filter(n=>n.endsWith('.json')).sort().reverse();
- const photos=await Promise.all(names.map(async n=>JSON.parse(await readFile(join(data,'photos',n),'utf8')))); return send(res,200,photos);
+ const names=(await readdir(join(data,'photos'))).filter(n=>n.endsWith('.json'));
+ const photos=await Promise.all(names.map(async n=>JSON.parse(await readFile(join(data,'photos',n),'utf8'))));
+ const admin=new URL(req.url,'http://localhost').searchParams.get('manage')==='1';
+ if(admin && !session(req))return send(res,401,{error:'관리자 로그인이 필요합니다.'});
+ return send(res,200,photos.filter(p=>admin||!p.hidden).sort((a,b)=>(a.order||0)-(b.order||0)||b.id.localeCompare(a.id)));
+ }
+ if(/^\/api\/photos\/\d+-[a-f0-9]+$/.test(path) && req.method==='POST') {
+ if(!session(req))return send(res,401,{error:'관리자 로그인이 필요합니다.'});
+ const input=await body(req);const fields=projectFields(input);const id=path.split('/').pop();
+ return await exclusive(async()=>{
+  const file=join(data,'photos',id+'.json');let old;
+  try{old=JSON.parse(await readFile(file,'utf8'));}catch(error){if(error.code==='ENOENT')return send(res,404,{error:'시공 사례를 찾을 수 없습니다.'});throw error;}
+  const photo={...old,...fields};const temporary=file+'.'+randomBytes(6).toString('hex')+'.tmp';
+  try{await writeFile(temporary,JSON.stringify(photo),{flag:'wx'});await rename(temporary,file);}finally{await unlink(temporary).catch(()=>{});}
+  return send(res,200,photo);
+ });
  }
  if(path==='/api/photos' && req.method==='POST') {
  if(!session(req)) return send(res,401,{error:'관리자 로그인이 필요합니다.'});
- const input=await body(req); const title=String(input.title || '').trim(); const description=String(input.description || '').trim();
- if(!title || title.length>100 || description.length>500) return send(res,400,{error:'제목은 1~100자, 설명은 500자 이하로 입력해 주세요.'});
- if(typeof input.image!=='string' || !/^[A-Za-z0-9+/]*={0,2}$/.test(input.image)) return send(res,400,{error:'올바른 사진을 선택해 주세요.'});
- const bytes=Buffer.from(input.image,'base64'); let ext;
- if(bytes.subarray(0,3).equals(Buffer.from([255,216,255]))) ext='jpg';
- else if(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) ext='png';
- else if(bytes.toString('ascii',0,4)==='RIFF' && bytes.toString('ascii',8,12)==='WEBP') ext='webp';
- if(!ext || bytes.length>5*1024*1024 || bytes.length<12) return send(res,400,{error:'5MB 이하의 JPG, PNG, WebP 사진만 가능합니다.'});
- const id=Date.now()+'-'+randomBytes(8).toString('hex'); const photo={id,title,description,url:`/uploads/${id}.${ext}`};
- await writeFile(join(data,'photos',id+'.'+ext),bytes,{flag:'wx'}); await writeFile(join(data,'photos',id+'.json'),JSON.stringify(photo),{flag:'wx'}); return send(res,201,photo);
+ const input=await body(req,56*1024*1024);const fields=projectFields(input);
+ const originals=input.images??[input.image];
+ if(!Array.isArray(originals)||!originals.length||originals.length>8)return send(res,400,{error:'사진은 1~8장 선택해 주세요.'});
+ const decoded=originals.map(decodeImage);const id=Date.now()+'-'+randomBytes(8).toString('hex');
+ const urls=decoded.map((image,index)=>`/uploads/${id}${index?'-'+index:''}.${image.ext}`);
+ const photo={id,...fields,url:urls[0],images:urls};const written=[];
+ try{
+  for(const [index,image]of decoded.entries()){const file=join(data,'photos',urls[index].split('/').pop());await writeFile(file,image.bytes,{flag:'wx'});written.push(file);}
+  await writeFile(join(data,'photos',id+'.json'),JSON.stringify(photo),{flag:'wx'});
+ }catch(error){await Promise.all(written.map(file=>unlink(file).catch(()=>{})));throw error;}
+ return send(res,201,photo);
  }
  if(req.method!=='GET' && req.method!=='HEAD') return send(res,405,{error:'지원하지 않는 요청입니다.'});
  let file;
@@ -67,7 +105,7 @@ export const server = createServer(async(req,res)=>{
  else if(path==='/admin.html') file=join(root,'admin.html');
  else if(/^\/Photo\/[a-zA-Z0-9_.-]+\.(jpg|jpeg|png|webp)$/i.test(path)) file=join(root,path.slice(1));
  else if(/^\/(css|js)\/[a-z-]+\.(css|js)$/.test(path)) file=join(root,path.slice(1));
- else if(/^\/uploads\/\d+-[a-f0-9]+\.(jpg|png|webp)$/.test(path)) file=join(data,'photos',path.split('/').pop());
+ else if(/^\/uploads\/\d+-[a-f0-9]+(?:-[1-7])?\.(jpg|png|webp)$/.test(path)) file=join(data,'photos',path.split('/').pop());
  else return send(res,404,{error:'페이지를 찾을 수 없습니다.'});
  let bytes; try { bytes=await readFile(file); } catch(err) { if(err.code==='ENOENT') return send(res,404,{error:'파일을 찾을 수 없습니다.'}); throw err; }
  const ext=file.split('.').pop(); const types={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',jpg:'image/jpeg',png:'image/png',webp:'image/webp'};
