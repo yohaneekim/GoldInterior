@@ -47,7 +47,7 @@ document.getElementById('photo').addEventListener('change',()=>{clearPreview();t
 function readImage(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(new Error('사진을 읽지 못했습니다.'));reader.readAsDataURL(file);});}
 upload.addEventListener('submit',async event=>{
  event.preventDefault();const button=upload.querySelector('button');button.disabled=true;status.textContent='시공 사례를 등록하고 있습니다…';
- try{const files=selectedFiles();const fields=Object.fromEntries(new FormData(upload));delete fields.photo;fields.order=Number(fields.order);fields.images=await Promise.all(files.map(readImage));await api('/api/photos',fields,90000);upload.reset();clearPreview();status.textContent='시공 사례를 등록했습니다.';await list();}
+ try{const files=selectedFiles();const fields=Object.fromEntries(new FormData(upload));delete fields.photo;fields.order=Number(fields.order);fields.images=await Promise.all(files.map(readImage));await api('/api/photos',fields,90000);upload.reset();clearPreview();status.textContent='시공 사례를 등록했습니다. 홈페이지의 시공 사진 모아보기에서 확인할 수 있습니다.';await list();}
  catch(error){status.textContent=error.name==='TimeoutError'?'응답이 지연되고 있습니다. 재등록 전 홈페이지에서 등록 여부를 확인해 주세요.':error.message;}finally{button.disabled=false;}
 });
 (async()=>{try{const session=await api('/api/session');show(session.authenticated,session.setupRequired);if(session.authenticated)await list();}catch(error){status.textContent=error.message;}})();
