@@ -6,6 +6,9 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(fileURLToPath(import.meta.url));
 const data = resolve(process.env.DATA_DIR || join(root, 'data'));
 await mkdir(join(data, 'photos'), { recursive: true });
+await mkdir(join(data,'content'),{recursive:true});
+const defaults=JSON.parse(await readFile(join(root,'content-defaults.json'),'utf8'));
+async function contentRecord(id){try{return JSON.parse(await readFile(join(data,'content',id+'.json'),'utf8'));}catch(e){if(e.code==='ENOENT')return defaults.find(x=>x.id===id);throw e;}}
 const origin = process.env.PUBLIC_ORIGIN || 'http://localhost:3000';
 const sessions = new Map();
 const attempts = new Map();
@@ -32,6 +35,25 @@ function decodeImage(image) {
  if(!ext||bytes.length>5*1024*1024||bytes.length<12)throw Object.assign(new Error('사진 한 장당 5MB 이하의 JPG, PNG, WebP만 가능합니다.'),{status:400});
  return {bytes,ext};
 }
+
+async function saveEditedRecord(file,old,input,fields,max=8){
+ const existing=old.images?.length?old.images:[old.url];
+ const kept=input.keepImages===undefined?existing:input.keepImages;
+ if(!Array.isArray(kept)||kept.some(url=>!existing.includes(url))||new Set(kept).size!==kept.length)throw Object.assign(new Error('보존할 사진 목록을 확인해 주세요.'),{status:400});
+ const additions=input.images===undefined?[]:input.images;
+ if(!Array.isArray(additions)||kept.length+additions.length<1||kept.length+additions.length>max)throw Object.assign(new Error('사진은 1~'+max+'장까지 가능합니다.'),{status:400});
+ const order=input.imageOrder??Array.from({length:kept.length+additions.length},(_,i)=>i);
+ if(!Array.isArray(order)||order.length!==kept.length+additions.length||new Set(order).size!==order.length||order.some(i=>!Number.isInteger(i)||i<0||i>=order.length))throw Object.assign(new Error('사진 순서를 확인해 주세요.'),{status:400});
+ const decoded=additions.map(decodeImage);
+ const captions=input.captions??[...kept.map(url=>old.captions?.[existing.indexOf(url)]||old.title),...decoded.map(()=>fields.title)];
+ if(!Array.isArray(captions)||captions.length!==kept.length+decoded.length||captions.some(x=>typeof x!=='string'||x.length>300))throw Object.assign(new Error('사진별 설명은 300자 이하로 입력해 주세요.'),{status:400});
+ const written=[];const urls=[...kept];const stamp=Date.now()+'-'+randomBytes(8).toString('hex');const temporary=file+'.'+randomBytes(6).toString('hex')+'.tmp';
+ try{
+ for(const [index,image]of decoded.entries()){const name=stamp+(index?'-'+index:'')+'.'+image.ext;const target=join(data,'photos',name);await writeFile(target,image.bytes,{flag:'wx'});written.push(target);urls.push('/uploads/'+name);}
+ const sorted=order.map(i=>urls[i]);const result={...old,...fields,url:sorted[0],images:sorted,captions};await writeFile(temporary,JSON.stringify(result),{flag:'wx'});await rename(temporary,file);return result;
+ }catch(e){await Promise.all(written.map(file=>unlink(file).catch(()=>{})));throw e;}finally{await unlink(temporary).catch(()=>{});}
+}
+
 // Serialize metadata edits so simultaneous saves cannot overwrite a newer edit halfway through.
 let mutation=Promise.resolve();
 function exclusive(action){const next=mutation.then(action);mutation=next.catch(()=>{});return next;}
@@ -67,6 +89,12 @@ export const server = createServer(async(req,res)=>{
  const token=randomBytes(32).toString('hex'); sessions.set(token,{expires:Date.now()+8*3600000}); res.setHeader('Set-Cookie',cookie(token,28800)); return send(res,200,{ok:true});
  }
  if(path==='/api/logout' && req.method==='POST') { const s=session(req); if(s) sessions.delete(s.token); res.setHeader('Set-Cookie',cookie('',0)); return send(res,200,{ok:true}); }
+ if(path==='/api/content' && req.method==='GET') {return send(res,200,await Promise.all(defaults.map(item=>contentRecord(item.id))));}
+ if(/^\/api\/content\/(wood|green|white|hero-[1-5]|about)$/.test(path) && req.method==='POST'){
+ if(!session(req))return send(res,401,{error:'관리자 로그인이 필요합니다.'});
+ const input=await body(req,56*1024*1024);const fields=projectFields(input);const id=path.split('/').pop();
+ return await exclusive(async()=>{const old=await contentRecord(id);const photo=await saveEditedRecord(join(data,'content',id+'.json'),old,input,fields,old.slot?1:8);return send(res,200,photo);});
+ }
  if(path==='/api/photos' && req.method==='GET') {
  const names=(await readdir(join(data,'photos'))).filter(n=>n.endsWith('.json'));
  const photos=await Promise.all(names.map(async n=>JSON.parse(await readFile(join(data,'photos',n),'utf8'))));
@@ -76,12 +104,11 @@ export const server = createServer(async(req,res)=>{
  }
  if(/^\/api\/photos\/\d+-[a-f0-9]+$/.test(path) && req.method==='POST') {
  if(!session(req))return send(res,401,{error:'관리자 로그인이 필요합니다.'});
- const input=await body(req);const fields=projectFields(input);const id=path.split('/').pop();
+ const input=await body(req,56*1024*1024);const fields=projectFields(input);const id=path.split('/').pop();
  return await exclusive(async()=>{
   const file=join(data,'photos',id+'.json');let old;
   try{old=JSON.parse(await readFile(file,'utf8'));}catch(error){if(error.code==='ENOENT')return send(res,404,{error:'시공 사례를 찾을 수 없습니다.'});throw error;}
-  const photo={...old,...fields};const temporary=file+'.'+randomBytes(6).toString('hex')+'.tmp';
-  try{await writeFile(temporary,JSON.stringify(photo),{flag:'wx'});await rename(temporary,file);}finally{await unlink(temporary).catch(()=>{});}
+  const photo=await saveEditedRecord(file,old,input,fields);
   return send(res,200,photo);
  });
  }
@@ -102,13 +129,14 @@ export const server = createServer(async(req,res)=>{
  if(req.method!=='GET' && req.method!=='HEAD') return send(res,405,{error:'지원하지 않는 요청입니다.'});
  let file;
  if(path==='/' || path==='/GoldInterior.html' || path==='/index.html') file=join(root,'index.html');
+ else if(path==='/content-defaults.json') file=join(root,'content-defaults.json');
  else if(path==='/admin.html') file=join(root,'admin.html');
  else if(/^\/Photo\/[a-zA-Z0-9_.-]+\.(jpg|jpeg|png|webp)$/i.test(path)) file=join(root,path.slice(1));
  else if(/^\/(css|js)\/[a-z-]+\.(css|js)$/.test(path)) file=join(root,path.slice(1));
  else if(/^\/uploads\/\d+-[a-f0-9]+(?:-[1-7])?\.(jpg|png|webp)$/.test(path)) file=join(data,'photos',path.split('/').pop());
  else return send(res,404,{error:'페이지를 찾을 수 없습니다.'});
  let bytes; try { bytes=await readFile(file); } catch(err) { if(err.code==='ENOENT') return send(res,404,{error:'파일을 찾을 수 없습니다.'}); throw err; }
- const ext=file.split('.').pop(); const types={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',jpg:'image/jpeg',png:'image/png',webp:'image/webp'};
+ const ext=file.split('.').pop(); const types={json:'application/json; charset=utf-8',html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',jpg:'image/jpeg',png:'image/png',webp:'image/webp'};
  res.writeHead(200,{'Content-Type':types[ext], 'Cache-Control':'no-cache'}); res.end(req.method==='HEAD'?undefined:bytes);
  } catch(err) { if(!res.headersSent) send(res,err.status || 500,{error:err.status?err.message:'서버 처리 중 문제가 발생했습니다.'}); }
 });

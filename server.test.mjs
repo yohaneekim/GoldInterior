@@ -26,6 +26,18 @@ test('관리자 인증, 업로드 제한, 영구 저장과 공개 조회',async(
  const login=await post('/api/login',{username:'test-admin',password:'test-password-123'});assert.equal(login.status,200);const cookie=login.headers.get('set-cookie').split(';')[0];assert.match(login.headers.get('set-cookie'),/HttpOnly/);
  assert.equal((await post('/api/photos',{title:'잘못된 파일',image:Buffer.from('<svg>test</svg>').toString('base64')},cookie)).status,400);
  const image='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+ const content=await (await fetch(base+'/api/content')).json();
+ assert.equal(content.length,9);assert.equal(content.find(x=>x.id==='wood').size,'75평형');
+ assert.equal((await post('/api/content/wood',{title:'권한 검사'})).status,401);
+ const wood=content.find(x=>x.id==='wood');
+ const edited=await post('/api/content/wood',{...wood,title:'진선 수정',keepImages:[wood.url],images:[image],imageOrder:[1,0],captions:['교체 대표 사진','원본 사진']},cookie);
+ assert.equal(edited.status,200);const changed=await edited.json();assert.match(changed.url,/^\/uploads\//);assert.equal(changed.images[1],wood.url);assert.equal(changed.captions[0],'교체 대표 사진');
+ assert.equal((await fetch(base+wood.url)).status,200);assert.equal((await fetch(base+changed.url)).status,200);
+ const persistedContent=await (await fetch(base+'/api/content')).json();assert.equal(persistedContent.find(x=>x.id==='wood').title,'진선 수정');
+ assert.equal((await post('/api/content/wood',{...wood,keepImages:['https://evil.example/test.jpg']},cookie)).status,400);
+ assert.equal((await post('/api/content/hero-1',{title:'슬라이드',images:[image]},cookie)).status,400);
+ const originalHero=content.find(x=>x.id==='hero-1');
+ const replaceHero=await post('/api/content/hero-1',{...originalHero,keepImages:[],images:[image],captions:['새 메인 사진']},cookie);assert.equal(replaceHero.status,200);
  const result=await post('/api/photos',{title:'테스트 시공',description:'등록 확인',image},cookie);assert.equal(result.status,201);const photo=await result.json();
  const photos=await (await fetch(base+'/api/photos')).json();assert.equal(photos.length,1);assert.equal(photos[0].title,'테스트 시공');
  const saved=await fetch(base+photo.url);assert.equal(saved.headers.get('content-type'),'image/png');assert.equal(Buffer.from(await saved.arrayBuffer()).toString('base64'),image);
@@ -55,6 +67,8 @@ test('관리자 인증, 업로드 제한, 영구 저장과 공개 조회',async(
  assert.equal((await post('/api/photos/'+project.id,{...update,hidden:false,order:-2},cookie)).status,200);
  assert.equal((await (await fetch(base+'/api/photos')).json())[0].title,'수정한 사례');
  for(const path of ['/css/style.css','/js/gallery.js','/admin.html'])assert.equal((await fetch(base+path)).status,200);
+ const replaceProject=await post('/api/photos/'+project.id,{...update,hidden:false,keepImages:[project.images[1]],images:[image],imageOrder:[1,0],captions:['새 대표','남긴 사진']},cookie);
+ assert.equal(replaceProject.status,200);const replaced=await replaceProject.json();assert.equal(replaced.images.length,2);assert.equal(replaced.captions[0],'새 대표');assert.equal((await fetch(base+project.images[0])).status,200);
  assert.equal((await post('/api/logout',{},cookie)).status,200);assert.equal((await post('/api/photos',{},cookie)).status,401);
  }finally{await new Promise(resolve=>server.close(resolve));await rm(data,{recursive:true,force:true});}
 });

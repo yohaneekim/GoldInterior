@@ -988,5 +988,20 @@ dialog::backdrop {
   }
 }
 
-.photo-gallery-section{background:#eeeee6}.photo-gallery-section .caption{margin:0 0 24px}.gallery-more{display:flex;margin:36px auto 0}
-@media(min-width:761px){.site-header nav{gap:22px}}
+.photo-gallery-section {
+  background: #eeeee6;
+}
+.photo-gallery-section .caption {
+  margin: 0 0 24px;
+}
+.gallery-more {
+  display: flex;
+  margin: 36px auto 0;
+}
+@media (min-width: 761px) {
+  .site-header nav {
+    gap: 22px;
+  }
+}
+
+.brand-history{border-block:1px solid var(--line);padding:20px 0;margin-bottom:25px}.brand-history strong{font-size:15px}.brand-history ol{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px;font-size:13px}.brand-history li+li:before{content:"→";margin-right:10px;color:#8b7951}#representative-description{white-space:pre-line}

@@ -1,8 +1,4 @@
-const spaces = new Map([
-  ['wood', {title:'우드와 빛의 온기', description:'나무 테이블과 세로 파티션, 샹들리에가 어우러진 공간입니다. 마음에 드는 소재나 조명 분위기를 상담 시 알려주세요.', url:'/Photo/space-wood.jpg'}],
-  ['green', {title:'깊은 색감, 편안한 분위기', description:'그린 컬러의 벽면과 곡선 소파, 간접 조명이 만드는 분위기를 살펴보세요.', url:'/Photo/space-green-01.jpg'}],
-  ['white', {title:'일상을 담는 수납', description:'화이트 수납과 우드 선반으로 구성한 공간입니다. 수납할 물건과 생활 동선에 맞는 구성을 상담해 보세요.', url:'/Photo/space-white.jpg'}],
-]);
+const spaces = new Map([["wood",{"id":"wood","title":"마포구 중식당 진선","description":"75평형 중식당. 우드 테이블과 파티션, 샹들리에가 어우러진 매장 공간입니다.","region":"서울 마포구","size":"75평형","url":"/Photo/space-wood.jpg"}],["green",{"id":"green","title":"신림동 노래바","description":"45평형 노래바. 그린 컬러의 벽과 곡선 소파, 간접 조명이 만드는 분위기를 담았습니다.","region":"서울 관악구 신림동","size":"45평형","url":"/Photo/space-green-01.jpg"}],["white",{"id":"white","title":"서울대입구 이편한세상","description":"서울대입구 인근 이편한세상 45평형 주거 공간. 화이트 수납장과 우드 선반으로 정돈한 실내입니다.","region":"서울 관악구 · 서울대입구 인근","size":"45평형","url":"/Photo/space-white.jpg"}]]);
 const dialog = document.getElementById('project-dialog');
 const title = document.getElementById('project-title');
 const description = document.getElementById('project-description');
@@ -20,8 +16,8 @@ function showSpace(space, button) {
   }
   images.replaceChildren();
   for (const [index,url] of (space.images?.length ? space.images : [space.url]).entries()) {
-    const figure=document.createElement('figure'); const image=document.createElement('img'); image.src=url; image.alt=`${space.title} 사진 ${index+1}`; if(index) image.loading='lazy';
-    const caption=document.createElement('figcaption'); caption.textContent=`${String(index+1).padStart(2,'0')} / ${space.title}`;
+    const figure=document.createElement('figure'); const image=document.createElement('img'); image.src=url; image.alt=space.captions?.[index] || `${space.title} 사진 ${index+1}`; if(index) image.loading='lazy';
+    const caption=document.createElement('figcaption'); caption.textContent=space.captions?.[index] || `${String(index+1).padStart(2,'0')} / ${space.title}`;
     figure.append(image,caption); images.append(figure);
   }
   dialog.showModal(); dialog.scrollTop=0; document.body.classList.add('modal-open');
@@ -54,3 +50,13 @@ async function loadGallery() {
   }catch{document.getElementById('gallery-status').textContent='등록 사진을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.';}
 }
 loadGallery();
+
+async function loadHomepageContent(){
+ let records;try{const response=await fetch('/api/content',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error();records=await response.json();}catch{return;}
+ for(const item of records){
+ if(item.id.startsWith('hero-')){const image=document.querySelectorAll('.hero-slides .hero-image')[Number(item.id.slice(5))-1];if(image){image.src=item.url;image.alt=item.captions?.[0]||item.title;}continue;}
+ if(item.id==='about'){document.querySelector('.about-image img').src=item.url;document.querySelector('.about-image img').alt=item.captions?.[0]||item.title;document.getElementById('representative-title').textContent=item.title;document.getElementById('representative-description').textContent=item.description;continue;}
+ spaces.set(item.id,item);const button=document.querySelector('[data-space="'+item.id+'"]');if(!button)continue;button.closest('article').hidden=!!item.hidden;button.querySelector('img').src=item.url;button.querySelector('img').alt=item.captions?.[0]||item.title;button.querySelector('h3').textContent=item.title;button.querySelector('.project-meta').textContent=[item.region,item.size].filter(Boolean).join(' · ')+' ↗';button.querySelector('.project-description').textContent=item.description;
+ }
+}
+loadHomepageContent();

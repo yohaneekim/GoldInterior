@@ -1,0 +1,158 @@
+[
+  {
+    "id": "wood",
+    "title": "마포구 중식당 진선",
+    "description": "75평형 중식당. 우드 테이블과 파티션, 샹들리에가 어우러진 매장 공간입니다.",
+    "region": "서울 마포구",
+    "size": "75평형",
+    "url": "/Photo/space-wood.jpg",
+    "images": [
+      "/Photo/space-wood.jpg"
+    ],
+    "captions": [
+      "마포구 중식당 진선"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "green",
+    "title": "신림동 노래바",
+    "description": "45평형 노래바. 그린 컬러의 벽과 곡선 소파, 간접 조명이 만드는 분위기를 담았습니다.",
+    "region": "서울 관악구 신림동",
+    "size": "45평형",
+    "url": "/Photo/space-green-01.jpg",
+    "images": [
+      "/Photo/space-green-01.jpg"
+    ],
+    "captions": [
+      "신림동 노래바"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "white",
+    "title": "서울대입구 이편한세상",
+    "description": "서울대입구 인근 이편한세상 45평형 주거 공간. 화이트 수납장과 우드 선반으로 정돈한 실내입니다.",
+    "region": "서울 관악구 · 서울대입구 인근",
+    "size": "45평형",
+    "url": "/Photo/space-white.jpg",
+    "images": [
+      "/Photo/space-white.jpg"
+    ],
+    "captions": [
+      "서울대입구 이편한세상"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "hero-1",
+    "title": "자연광과 수납이 어우러진 주거 공간",
+    "description": "",
+    "url": "/Photo/main-02.jpg",
+    "slot": true,
+    "images": [
+      "/Photo/main-02.jpg"
+    ],
+    "captions": [
+      "자연광과 수납이 어우러진 주거 공간"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "hero-2",
+    "title": "간접 조명으로 꾸민 라운지",
+    "description": "",
+    "url": "/Photo/main-01.jpg",
+    "slot": true,
+    "images": [
+      "/Photo/main-01.jpg"
+    ],
+    "captions": [
+      "간접 조명으로 꾸민 라운지"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "hero-3",
+    "title": "우드 파티션과 장식 조명이 있는 매장",
+    "description": "",
+    "url": "/Photo/main-03.jpg",
+    "slot": true,
+    "images": [
+      "/Photo/main-03.jpg"
+    ],
+    "captions": [
+      "우드 파티션과 장식 조명이 있는 매장"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "hero-4",
+    "title": "따뜻한 조명과 좌석이 있는 매장",
+    "description": "",
+    "url": "/Photo/main-04.jpg",
+    "slot": true,
+    "images": [
+      "/Photo/main-04.jpg"
+    ],
+    "captions": [
+      "따뜻한 조명과 좌석이 있는 매장"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "hero-5",
+    "title": "밝은 조명과 벽돌 벽의 실내",
+    "description": "",
+    "url": "/Photo/main-05.jpg",
+    "slot": true,
+    "images": [
+      "/Photo/main-05.jpg"
+    ],
+    "captions": [
+      "밝은 조명과 벽돌 벽의 실내"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  },
+  {
+    "id": "about",
+    "title": "대표 이정한 · 2003년부터 이어온 공간의 경험",
+    "description": "2003년 사업을 시작한 대표 이정한은 에덴 디자인, 시공간, 빈체로를 거쳐 골드 인테리어로 이어왔습니다. 주거 공간과 상업 공간의 쓰임을 생각하며 고객의 공간 이야기를 함께 나눕니다.",
+    "url": "/Photo/main-04.jpg",
+    "slot": true,
+    "images": [
+      "/Photo/main-04.jpg"
+    ],
+    "captions": [
+      "대표 이정한 · 2003년부터 이어온 공간의 경험"
+    ],
+    "order": 0,
+    "hidden": false,
+    "duration": "",
+    "scope": ""
+  }
+]
