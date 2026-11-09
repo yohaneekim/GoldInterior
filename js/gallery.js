@@ -49,6 +49,8 @@ for (const space of additionalSpaces) {
 }
 let visible = 6;
 function renderGallery() {
+  document.getElementById('photo-gallery').classList.toggle('is-empty', cards.length === 0);
+  document.getElementById('gallery-help').hidden = cards.length === 0;
   cards.forEach((card, index) => { card.hidden = index >= visible; });
   galleryMore.hidden = visible >= cards.length;
   galleryStatus.textContent = cards.length ? '시공 사례 ' + cards.length + '개 중 ' + Math.min(visible, cards.length) + '개 표시' : '추가 시공 사진을 준비하고 있습니다.';

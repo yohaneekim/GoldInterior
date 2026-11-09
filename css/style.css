@@ -375,9 +375,7 @@ p {
   grid-template-columns: 1fr 1.7fr;
   gap: 70px;
 }
-.faq-grid .text-link {
-  margin-top: 30px;
-}
+
 .faq-list details {
   border-bottom: 1px solid var(--line);
   padding: 23px 0;
@@ -806,9 +804,7 @@ dialog::backdrop {
   .faq-grid h2 br {
     display: none;
   }
-  .faq-grid .text-link {
-    margin-top: 18px;
-  }
+
   .faq-list summary {
     font-size: 15px;
   }
@@ -1005,3 +1001,13 @@ dialog::backdrop {
 }
 
 .brand-history{border-block:1px solid var(--line);padding:20px 0;margin-bottom:25px}.brand-history strong{font-size:15px}.brand-history ol{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px;font-size:13px}.brand-history li+li:before{content:"→";margin-right:10px;color:#8b7951}#representative-description{white-space:pre-line}
+
+/* 사진 준비 중에는 간결한 한 줄 안내로 표시합니다. */
+.photo-gallery-section.is-empty{padding-block:44px;border-block:1px solid var(--line)}
+.photo-gallery-section.is-empty>.container{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px 40px}
+.photo-gallery-section.is-empty .section-heading{margin:0}
+.photo-gallery-section.is-empty .eyebrow{margin-bottom:10px}
+.photo-gallery-section.is-empty h2{font-size:26px;letter-spacing:-1px}
+.photo-gallery-section.is-empty .caption{margin:0;color:var(--muted);font-size:13px}
+.photo-gallery-section.is-empty #uploaded-gallery{display:none}
+@media(max-width:760px){.photo-gallery-section.is-empty{padding-block:30px}.photo-gallery-section.is-empty>.container{grid-template-columns:1fr;gap:12px}.photo-gallery-section.is-empty h2{font-size:23px}}
