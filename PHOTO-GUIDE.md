@@ -1,60 +1,53 @@
-# VS Code에서 사진 바꾸기
+# 사진과 설명 직접 수정하기
 
-홈페이지 본문은 `index.html`입니다. `GoldInterior.html`은 예전 파일명으로 접속하는 경우를 위한 이동용 파일입니다.
+## 기본 사진
+사진은 Photo 폴더에 넣습니다. 원본 확장자를 유지하고 영문·숫자·하이픈 파일명을 권합니다.
 
-## 사진 파일 준비
-`Photo` 폴더의 기존 사진은 그대로 보존했습니다. 추가할 사진도 이 폴더에 넣으세요. 파일명은 `living-room.jpg`처럼 영문·숫자·하이픈을 사용하면 편합니다. 로컬 Node 서버는 JPG, JPEG, PNG, WebP 사진을 제공합니다.
+| 화면 | 수정 위치 |
+| --- | --- |
+| 메인 슬라이드 5장 | index.html에서 hero-slides 검색. img의 src와 alt 수정 |
+| 대표 소개 사진·문구·연혁 | index.html에서 about-image 또는 representative-title 검색 |
+| 기본 사례 카드 3개 | index.html에서 data-space="wood", "green", "white" 검색 |
+| 기본 사례 상세 사진·설명 | js/gallery.js 맨 위 spaces 목록 |
+| 추가 시공 사례 | js/gallery.js에서 additionalSpaces 검색 |
 
-## 화면별 교체 위치
-| 사진 위치 | 수정할 파일 | 찾을 내용 |
-| --- | --- | --- |
-| 맨 위 대형 사진 | index.html | class="hero-image"의 src와 alt |
-| 회사 소개 사진 | index.html | class="about-image" 안의 img |
-| 기본 공간 사진 3장 | index.html + js/gallery.js | data-space="wood / green / white" 카드와 같은 키의 상세 데이터 |
-| 관리자가 등록한 시공 사례 | /admin.html | 사진 1~8장 등록 및 정보 수정 |
+기본 카드와 상세 보기 정보는 두 곳을 함께 수정해야 합니다. 메인 사진은 현재 main-02.jpg → main-01.jpg → main-03.jpg → main-04.jpg → main-05.jpg 순서입니다. 자동 넘김 간격은 js/hero-slider.js의 5000(5초)입니다.
 
-HTML 사진은 해당 img의 src를 다음처럼 바꿉니다.
-
+HTML 사진 경로 예:
 ```html
-src="./Photo/living-room.jpg"
+<img src="/Photo/project-04.jpg" alt="실제 사진의 설명">
 ```
 
-첫 화면 사진은 CSS 배경이 아니라 img입니다. 크기가 다르면 width/height도 실제 비율에 맞추세요. 공유 미리보기 사진은 index.html의 og:image에서 별도로 수정합니다.
+## 추가 시공 사진 모아보기
+js/gallery.js의 `const additionalSpaces = [];` 안에 사례를 추가하세요.
 
-기본 카드의 사진·제목·설명을 바꾸면 js/gallery.js의 해당 키 데이터도 함께 수정해야 상세 보기와 일치합니다. 사진의 alt 문구도 실제 사진 설명으로 수정해 주세요. 서로 다른 현장 사진을 하나의 시공 사례로 묶거나 확인되지 않은 지역·평수를 기재하지 마세요.
+```js
+const additionalSpaces = [
+  {
+    id: 'project-04',
+    title: '새로운 시공 사례',
+    description: '사진과 공간에 대한 설명',
+    region: '확인된 시공 지역',
+    size: '확인된 평형',
+    url: '/Photo/project-04-01.jpg',
+    images: ['/Photo/project-04-01.jpg', '/Photo/project-04-02.jpg'],
+    captions: ['첫 번째 사진 설명', '두 번째 사진 설명']
+  }
+];
+```
 
-## 확인과 GitHub 반영
-1. VS Code에서 저장합니다(Ctrl+S).
-2. 서버 실행: 프로젝트 폴더 터미널에서 `node server.mjs`.
-3. http://localhost:3000 에서 새로고침합니다.
-4. 변경 내용을 확인합니다. 체크인·커밋·동기화는 실제 연결 방식을 확인한 뒤 사용자가 원할 때 별도로 진행합니다.
+예시 파일명은 직접 넣을 사진에 맞춰 변경하세요. id는 사례마다 다르게 정합니다. url은 카드 대표 사진이며 images는 상세 보기 순서, captions는 각 사진 설명입니다. 지역·면적·공사 기간은 확인한 정보만 적으세요. 사례는 6개씩 표시되고 더 보기로 이어집니다. 목록이 비어 있으면 준비 중 안내가 표시됩니다.
 
-코드에서 교체한 Photo 폴더 사진은 GitHub에 포함됩니다. 관리자 화면에서 등록한 사진은 비공개 data 폴더에 저장되어 GitHub에 포함되지 않습니다. 관리자 계정과 등록 사진을 실제 도메인에서 사용하려면 Node 서버 배포가 별도로 필요합니다. GitHub Pages 같은 정적 호스팅만으로는 관리자 API를 실행할 수 없습니다.
+## 현재 확인된 사례와 원본
+- wood: 마포구 중식당 진선 75평형. space-wood-clean.png는 천장 흰 페인트 자국을 자연스럽게 제거한 AI 보정본이며 원본 space-wood.jpg를 보존했습니다.
+- green: 신림동 노래바 45평형. space-green-01.jpg.
+- white: 관악구 서울대입구 인근 이편한세상 45평형. space-white.jpg.
 
-## 메인 사진 슬라이드 (3~5장)
-index.html에서 `hero-slides`를 검색하세요. 그 안의 img 5개가 첫 번째부터 다섯 번째 사진입니다. 각 src와 alt를 원하는 사진으로 변경하세요. 현재 main-01.jpg부터 main-05.jpg까지 연결되어 있습니다.
+## 확인하고 올리기
+1. VS Code에서 수정 후 Ctrl+S로 저장합니다.
+2. 프로젝트 터미널에서 node server.mjs를 실행합니다.
+3. http://localhost:3000 에서 화면과 사진 클릭을 확인합니다.
+4. 소스 제어에서 변경 파일을 확인하고 스테이징 → 커밋 → 동기화합니다.
+5. Vercel 배포 완료 후 실제 홈페이지를 새로고침합니다.
 
-4장 또는 5장을 쓰려면 두 번째 img 줄을 복사해 hero-slides 내부에 추가하고 경로를 바꾸세요. 추가 사진에는 is-active 클래스나 fetchpriority="high"를 넣지 않습니다. width/height는 실제 사진 비율에 맞추세요.
-
-5초 간격은 js/hero-slider.js의 `5000`에서 변경할 수 있습니다(밀리초). 사진 위에 마우스를 올리거나 키보드 초점이 들어오면 잠시 멈춥니다. 다른 탭을 보는 동안에도 멈추며, 기기의 동작 줄이기가 설정되어 있으면 자동 전환 없이 시작합니다.
-
-## 현재 사진 연결 및 관리자 갤러리
-메인 사진은 Photo/main-01.jpg ~ main-05.jpg 다섯 장입니다. main005.jpg는 main-05.jpg로 이름을 맞췄습니다. 회사 소개는 about.jpg, 기본 공간 사진은 space-wood.jpg / space-green-01.jpg / space-white.jpg입니다.
-
-로컬 서버를 `node server.mjs`로 실행하고 /admin.html에서 로그인한 다음 사진 1~8장과 제목을 등록하세요. 홈페이지 상단 메뉴의 시공 사진을 누르면 시공 사진 모아보기(#photo-gallery)로 이동합니다. 카드를 누르면 해당 사례의 전체 사진이 열리고, 사례가 6개보다 많으면 사진 더 보기가 표시됩니다. 기존 홈페이지를 열어둔 경우 새로고침하세요.
-
-이 관리자 등록 기능은 현재 Node 서버의 data 폴더에 저장합니다. Vercel 정적 배포에는 관리자 API와 온라인 저장소를 별도로 연결해야 합니다. GitHub 업로드만으로 이 컴퓨터의 등록 사진이 Vercel로 전송되지는 않습니다.
-
-## 대표님이 직접 수정하기
-1. 프로젝트 폴더에서 node server.mjs를 실행한 뒤 http://localhost:3000/admin.html 에 접속합니다.
-2. 로그인 후 ‘홈페이지 사진과 시공 사례 수정’에서 수정할 항목을 찾습니다. 메인 슬라이드 5장, 대표 소개 사진, 기본 사례 wood/green/white도 표시됩니다.
-3. ‘사진 교체 · 사진별 설명 · 정보 수정’을 펼칩니다. 제목, 본문 설명, 지역, 면적을 고칠 수 있습니다.
-4. 사진을 추가하거나 ‘목록에서 제외’한 뒤 새 사진을 선택해 교체합니다. ‘앞으로/뒤로’로 순서를 바꾸면 첫 사진이 대표 이미지가 됩니다. 사진별 설명은 300자까지 입력합니다.
-5. ‘변경 내용 저장’을 누르고 홈페이지를 새로고침합니다. 메인/소개 사진은 한 항목에 한 장, 시공 사례는 1~8장입니다.
-
-원본은 삭제하지 않습니다. 수정 정보는 data/content 또는 data/photos에 저장됩니다. 이 폴더는 GitHub에 올리지 않으므로 실제 Vercel 사이트에서 사용하려면 별도 API·영구 저장소 연결이 필요합니다. content-defaults.json은 공개용 기본 정보만 담으며 관리자 계정 정보가 아닙니다.
-
-확인된 사례: wood = 마포구 중식당 진선 75평형, green = 신림동 노래바 45평형, white = 관악구 서울대입구 인근 이편한세상 45평형. 사진이 같은 현장인지 확인되지 않은 다른 매장 사진은 여기에 묶지 않았습니다. 우드 원본의 흰 천장 자국은 보정하지 않았으며 같은 현장 재촬영본으로 교체하는 것을 권합니다.
-
-## 진선 사진 천장 보정본
-홈페이지는 Photo/space-wood-clean.png를 사용합니다. 내장 이미지 편집으로 검은 천장의 흰 페인트 자국을 제거했습니다. 원본 Photo/space-wood.jpg는 그대로 보존했습니다. 편집 지시: 천장의 흰 자국만 주변의 검은 무광 질감과 조명에 맞춰 자연스럽게 지우고 기존 구도·가구·파티션·샹들리에를 유지. AI 편집본이므로 완공 상태 확인용 원본은 별도로 보관합니다.
+계정과 온라인 사진 저장소는 사용하지 않습니다. 과거 로컬 data/ 데이터는 보존하되 홈페이지에서는 사용하지 않습니다. 사진 원본을 지우거나 data 폴더 전체를 GitHub에 올리지 마세요.

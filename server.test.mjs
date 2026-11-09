@@ -1,74 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { scryptSync } from 'node:crypto';
-test('관리자 인증, 업로드 제한, 영구 저장과 공개 조회',async()=>{
- const data=await mkdtemp(join(tmpdir(),'gold-test-')); process.env.DATA_DIR=data;process.env.NODE_ENV='test';
- await mkdir(join(data,'photos'));
- const {server}=await import('./server.mjs'); await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve)); const base=`http://127.0.0.1:${server.address().port}`;
- const post=(path,body,cookie,origin='http://localhost:3000')=>fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json',Origin:origin,...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(body)});
- try{
- assert.equal((await fetch(base+'/')).status,200);
- assert.equal((await (await fetch(base+'/api/session')).json()).setupRequired,true);
- assert.equal((await post('/api/setup',{username:'test-admin',password:'short'})).status,400);
- process.env.PUBLIC_ORIGIN='https://gold-interior.com';
- assert.equal((await post('/api/setup',{username:'test-admin',password:'test-password-123'})).status,403);
- delete process.env.PUBLIC_ORIGIN;
- assert.equal((await post('/api/setup',{username:'test-admin',password:'test-password-123'})).status,201);
- assert.equal((await (await fetch(base+'/api/session')).json()).setupRequired,false);
- assert.equal((await post('/api/setup',{username:'other',password:'other-password-123'})).status,403);
- assert.equal((await fetch(base+'/data/admin.json')).status,404);
- assert.equal((await post('/api/photos',{})).status,401);
- assert.equal((await post('/api/login',{},null,'https://evil.example')).status,403);
- assert.equal((await post('/api/login',{username:'test-admin',password:'wrong'})).status,401);
- const login=await post('/api/login',{username:'test-admin',password:'test-password-123'});assert.equal(login.status,200);const cookie=login.headers.get('set-cookie').split(';')[0];assert.match(login.headers.get('set-cookie'),/HttpOnly/);
- assert.equal((await post('/api/photos',{title:'잘못된 파일',image:Buffer.from('<svg>test</svg>').toString('base64')},cookie)).status,400);
- const image='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
- const content=await (await fetch(base+'/api/content')).json();
- assert.equal(content.length,9);assert.equal(content.find(x=>x.id==='wood').size,'75평형');
- assert.equal((await post('/api/content/wood',{title:'권한 검사'})).status,401);
- const wood=content.find(x=>x.id==='wood');
- const edited=await post('/api/content/wood',{...wood,title:'진선 수정',keepImages:[wood.url],images:[image],imageOrder:[1,0],captions:['교체 대표 사진','원본 사진']},cookie);
- assert.equal(edited.status,200);const changed=await edited.json();assert.match(changed.url,/^\/uploads\//);assert.equal(changed.images[1],wood.url);assert.equal(changed.captions[0],'교체 대표 사진');
- assert.equal((await fetch(base+wood.url)).status,200);assert.equal((await fetch(base+changed.url)).status,200);
- const persistedContent=await (await fetch(base+'/api/content')).json();assert.equal(persistedContent.find(x=>x.id==='wood').title,'진선 수정');
- assert.equal((await post('/api/content/wood',{...wood,keepImages:['https://evil.example/test.jpg']},cookie)).status,400);
- assert.equal((await post('/api/content/hero-1',{title:'슬라이드',images:[image]},cookie)).status,400);
- const originalHero=content.find(x=>x.id==='hero-1');
- const replaceHero=await post('/api/content/hero-1',{...originalHero,keepImages:[],images:[image],captions:['새 메인 사진']},cookie);assert.equal(replaceHero.status,200);
- const result=await post('/api/photos',{title:'테스트 시공',description:'등록 확인',image},cookie);assert.equal(result.status,201);const photo=await result.json();
- const photos=await (await fetch(base+'/api/photos')).json();assert.equal(photos.length,1);assert.equal(photos[0].title,'테스트 시공');
- const saved=await fetch(base+photo.url);assert.equal(saved.headers.get('content-type'),'image/png');assert.equal(Buffer.from(await saved.arrayBuffer()).toString('base64'),image);
- const fs=await import('node:fs/promises');assert.equal(JSON.parse(await fs.readFile(join(data,'photos',photo.id+'.json'),'utf8')).title,'테스트 시공');
- // Old single-photo records and new multi-photo projects must coexist.
- const legacyId='1700000000000-aabbccdd';
- await writeFile(join(data,'photos',legacyId+'.json'),JSON.stringify({id:legacyId,title:'기존 사진',description:'구버전 데이터',url:photo.url}));
- assert.equal((await (await fetch(base+'/api/photos')).json()).length,2);
- assert.equal((await fetch(base+'/api/photos?manage=1')).status,401);
- const multiple=await post('/api/photos',{title:'사진 묶음',images:[image,image],region:'서울',size:'32평',duration:'4주',scope:'주방',order:-1},cookie);
- assert.equal(multiple.status,201);const project=await multiple.json();assert.equal(project.images.length,2);
- assert.equal((await fetch(base+project.images[1])).status,200);
- assert.equal((await (await fetch(base+'/api/photos')).json())[0].id,project.id);
- assert.equal((await post('/api/photos',{title:'초과',images:Array(9).fill(image)},cookie)).status,400);
- assert.equal((await post('/api/photos',{title:'잘못된 두번째 사진',images:[image,'bad']},cookie)).status,400);
- assert.equal((await (await fetch(base+'/api/photos')).json()).length,3);
- assert.equal((await post('/api/photos/'+project.id,{title:'변경'})).status,401);
- assert.equal((await post('/api/photos/'+project.id,{title:'변경'},cookie,'https://evil.example')).status,403);
- assert.equal((await post('/api/photos/'+project.id,{title:'변경',order:1.5},cookie)).status,400);
- const update={title:'수정한 사례',description:'설명 수정',region:'부산',size:'40평',duration:'3주',scope:'전체',order:2,hidden:true};
- assert.equal((await post('/api/photos/'+project.id,update,cookie)).status,200);
- assert.equal((await (await fetch(base+'/api/photos')).json()).length,2);
- const managed=await (await fetch(base+'/api/photos?manage=1',{headers:{Cookie:cookie}})).json();
- assert.equal(managed.length,3);assert.equal(managed.find(p=>p.id===project.id).hidden,true);
- const stored=JSON.parse(await fs.readFile(join(data,'photos',project.id+'.json'),'utf8'));
- assert.equal(stored.region,'부산');assert.deepEqual(stored.images,project.images);
- assert.equal((await post('/api/photos/'+project.id,{...update,hidden:false,order:-2},cookie)).status,200);
- assert.equal((await (await fetch(base+'/api/photos')).json())[0].title,'수정한 사례');
- for(const path of ['/css/style.css','/js/gallery.js','/admin.html'])assert.equal((await fetch(base+path)).status,200);
- const replaceProject=await post('/api/photos/'+project.id,{...update,hidden:false,keepImages:[project.images[1]],images:[image],imageOrder:[1,0],captions:['새 대표','남긴 사진']},cookie);
- assert.equal(replaceProject.status,200);const replaced=await replaceProject.json();assert.equal(replaced.images.length,2);assert.equal(replaced.captions[0],'새 대표');assert.equal((await fetch(base+project.images[0])).status,200);
- assert.equal((await post('/api/logout',{},cookie)).status,200);assert.equal((await post('/api/photos',{},cookie)).status,401);
- }finally{await new Promise(resolve=>server.close(resolve));await rm(data,{recursive:true,force:true});}
+
+test('정적 미리보기만 제공하며 계정·업로드·비공개 파일 접근은 차단', async () => {
+  process.env.NODE_ENV = 'test';
+  const {server} = await import('./server.mjs');
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    for (const path of ['/','/index.html','/GoldInterior.html','/css/style.css','/js/main.js','/js/gallery.js','/js/hero-slider.js','/Photo/space-wood-clean.png']) {
+      assert.equal((await fetch(base + path)).status, 200, path);
+    }
+    for (const path of ['/admin.html','/js/admin.js','/api/session','/api/photos','/api/content','/data/admin.json','/content-defaults.json','/.git/config']) {
+      assert.equal((await fetch(base + path)).status, 404, path);
+    }
+    assert.equal((await fetch(base + '/api/photos', {method:'POST',body:'{}'})).status, 405);
+    assert.equal((await fetch(base, {method:'HEAD'})).status, 200);
+    const html = await (await fetch(base)).text();
+    assert.ok(!html.includes('관리자 로그인'));
+    const gallery = await (await fetch(base + '/js/gallery.js')).text();
+    assert.ok(!gallery.includes('/api/'));
+    assert.ok(!gallery.includes('fetch('));
+  } finally { await new Promise(resolve => server.close(resolve)); }
 });

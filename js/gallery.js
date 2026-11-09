@@ -27,36 +27,31 @@ dialog.querySelector('.dialog-close').addEventListener('click',()=>dialog.close(
 dialog.addEventListener('click',event=>{if(event.target===dialog){const b=dialog.getBoundingClientRect();if(event.clientX<b.left||event.clientX>b.right||event.clientY<b.top||event.clientY>b.bottom)dialog.close();}});
 dialog.addEventListener('close',()=>{document.body.classList.remove('modal-open');if(restoreFocus)opener?.focus({preventScroll:true});});
 document.getElementById('project-contact').addEventListener('click',()=>{restoreFocus=false;dialog.close();const message=document.getElementById('message');const text=`관심 공간: ${activeSpace.title}`;if(!message.value.includes(text))message.value=`${text}\n${message.value}`.trimEnd();});
-async function loadGallery() {
-  const status=document.getElementById('gallery-status');
-  const grid=document.getElementById('uploaded-gallery');
-  if(location.protocol==='file:'){status.textContent='사진 모아보기는 서버로 홈페이지를 열면 표시됩니다.';return;}
-  try {
-    const response=await fetch('/api/photos',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error('사진 목록 요청 실패');
-    const photos=await response.json();const fragment=document.createDocumentFragment();
-    const cards=[];
-    for(const photo of photos){
-      spaces.set(photo.id,photo);const card=document.createElement('article');card.className='project-card';cards.push(card);card.hidden=cards.length>6;
-      const button=document.createElement('button');button.type='button';button.className='project-open';button.dataset.space=photo.id;
-      const frame=document.createElement('span');frame.className='project-image';const image=document.createElement('img');image.src=photo.url;image.alt=photo.title;image.loading='lazy';
-      const meta=document.createElement('span');meta.className='project-meta';meta.textContent=`${photo.region||'SPACE STORY'} · ${(photo.images?.length||1)}장 ↗`;
-      const heading=document.createElement('h3');heading.textContent=photo.title;const copy=document.createElement('span');copy.className='project-description';copy.textContent=photo.description;
-      frame.append(image);button.append(frame,meta,heading,copy);card.append(button);fragment.append(card);
-    }
-    grid.replaceChildren(fragment);
-    status.textContent=photos.length?`등록된 시공 사례 ${photos.length}개`:'새로운 시공 사진을 준비하고 있습니다.';
-    const more=document.getElementById('gallery-more');let visible=6;more.hidden=cards.length<=visible;
-    more.onclick=()=>{visible+=6;cards.forEach((card,index)=>{card.hidden=index>=visible;});more.hidden=visible>=cards.length;status.textContent=`등록된 시공 사례 ${cards.length}개 중 ${Math.min(visible,cards.length)}개 표시`;};
-  }catch{document.getElementById('gallery-status').textContent='등록 사진을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.';}
-}
-loadGallery();
 
-async function loadHomepageContent(){
- let records;try{const response=await fetch('/api/content',{signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error();records=await response.json();}catch{return;}
- for(const item of records){
- if(item.id.startsWith('hero-')){const image=document.querySelectorAll('.hero-slides .hero-image')[Number(item.id.slice(5))-1];if(image){image.src=item.url;image.alt=item.captions?.[0]||item.title;}continue;}
- if(item.id==='about'){document.querySelector('.about-image img').src=item.url;document.querySelector('.about-image img').alt=item.captions?.[0]||item.title;document.getElementById('representative-title').textContent=item.title;document.getElementById('representative-description').textContent=item.description;continue;}
- spaces.set(item.id,item);const button=document.querySelector('[data-space="'+item.id+'"]');if(!button)continue;button.closest('article').hidden=!!item.hidden;button.querySelector('img').src=item.url;button.querySelector('img').alt=item.captions?.[0]||item.title;button.querySelector('h3').textContent=item.title;button.querySelector('.project-meta').textContent=[item.region,item.size].filter(Boolean).join(' · ')+' ↗';button.querySelector('.project-description').textContent=item.description;
- }
+// 추가 시공 사례는 여기에 작성하세요. 서버나 관리자 계정 없이 정적 사이트에서 표시됩니다.
+// 예: {id:'project-04', title:'사례 제목', description:'설명', region:'서울', size:'45평형',
+//      url:'/Photo/project-04.jpg', images:['/Photo/project-04.jpg'], captions:['사진 설명']}
+const additionalSpaces = [];
+const galleryGrid = document.getElementById('uploaded-gallery');
+const galleryStatus = document.getElementById('gallery-status');
+const galleryMore = document.getElementById('gallery-more');
+const cards = [];
+for (const space of additionalSpaces) {
+  spaces.set(space.id, space);
+  const card = document.createElement('article'); card.className = 'project-card';
+  const button = document.createElement('button'); button.type = 'button'; button.className = 'project-open'; button.dataset.space = space.id;
+  const frame = document.createElement('span'); frame.className = 'project-image';
+  const image = document.createElement('img'); image.src = space.url || space.images[0]; image.alt = space.captions?.[0] || space.title; image.loading = 'lazy';
+  const meta = document.createElement('span'); meta.className = 'project-meta'; meta.textContent = [space.region, space.size].filter(Boolean).join(' · ') + ' ↗';
+  const heading = document.createElement('h3'); heading.textContent = space.title;
+  const copy = document.createElement('span'); copy.className = 'project-description'; copy.textContent = space.description;
+  frame.append(image); button.append(frame, meta, heading, copy); card.append(button); galleryGrid.append(card); cards.push(card);
 }
-loadHomepageContent();
+let visible = 6;
+function renderGallery() {
+  cards.forEach((card, index) => { card.hidden = index >= visible; });
+  galleryMore.hidden = visible >= cards.length;
+  galleryStatus.textContent = cards.length ? '시공 사례 ' + cards.length + '개 중 ' + Math.min(visible, cards.length) + '개 표시' : '추가 시공 사진을 준비하고 있습니다.';
+}
+galleryMore.addEventListener('click', () => { visible += 6; renderGallery(); });
+renderGallery();
